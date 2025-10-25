@@ -5,31 +5,21 @@ import { Header } from "@/components/layout/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Clock, DollarSign, Users, Plus } from "lucide-react";
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useToast } from '@/components/ui/use-toast';
 import { BountyDetailsDialog } from '@/components/bounty/BountyDetailsDialog';
-import { bountyService, type Bounty, type BountyStats } from '@/services/BountyService';
-
-
+import { bountyService, type Bounty } from '@/services/BountyService';
+import { BountyNavigation } from '@/components/bounty/BountyNavigation';
+import { DollarSign, Clock, Users } from 'lucide-react';
 
 const Bounties = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const [bounties, setBounties] = useState<Bounty[]>([]);
-  const [stats, setStats] = useState<BountyStats>({
-    totalBounties: 0,
-    activeBounties: 0,
-    completedBounties: 0,
-    totalRewards: 0,
-    activeParticipants: 0,
-    completedThisMonth: 0
-  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchBounties();
-    fetchStats();
   }, []);
 
   const fetchBounties = async () => {
@@ -98,53 +88,8 @@ const Bounties = () => {
       />
       
       <main className="p-6 space-y-6">
-            {/* Stats */}
-            <div className="grid gap-4 md:grid-cols-4">
-              <Card className="glass">
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-2">
-                    <Trophy className="w-8 h-8 text-chart-warning" />
-                    <div>
-                      <p className="text-2xl font-bold">{stats.activeBounties}</p>
-                      <p className="text-xs text-muted-foreground">Active Bounties</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="glass">
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-2">
-                    <DollarSign className="w-8 h-8 text-chart-success" />
-                    <div>
-                      <p className="text-2xl font-bold">{stats.totalRewards.toLocaleString()}</p>
-                      <p className="text-xs text-muted-foreground">Total Rewards (STRK)</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="glass">
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-2">
-                    <Users className="w-8 h-8 text-chart-primary" />
-                    <div>
-                      <p className="text-2xl font-bold">{stats.activeParticipants}</p>
-                      <p className="text-xs text-muted-foreground">Active Participants</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="glass">
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-2">
-                    <Clock className="w-8 h-8 text-chart-secondary" />
-                    <div>
-                      <p className="text-2xl font-bold">{stats.completedThisMonth}</p>
-                      <p className="text-xs text-muted-foreground">Completed This Month</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+        {/* Quick Navigation */}
+        <BountyNavigation />
 
             {/* Create Bounty CTA */}
             {profile?.role === 'creator' || profile?.role === 'admin' ? (

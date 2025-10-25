@@ -37,6 +37,9 @@ const DataExplorerPage = lazy(() => import("./pages/DataExplorerPage"));
 const LibraryPage = lazy(() => import("./pages/LibraryPage"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
+const MyBounties = lazy(() => import("./pages/MyBounties"));
+const BountyStats = lazy(() => import("./pages/BountyStats"));
+const SubmitBounty = lazy(() => import("./pages/SubmitBounty"));
 
 const queryClient = new QueryClient();
 
@@ -169,6 +172,21 @@ const App = () => (
             <Route path="/status" element={
               <ProtectedRoute>
                 <SystemStatus />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-bounties" element={
+              <ProtectedRoute>
+                <MyBounties />
+              </ProtectedRoute>
+            } />
+            <Route path="/bounty-stats" element={
+              <ProtectedRoute>
+                <BountyStats />
+              </ProtectedRoute>
+            } />
+            <Route path="/bounty/:bountyId/submit" element={
+              <ProtectedRoute>
+                <SubmitBounty />
               </ProtectedRoute>
             } />
             
