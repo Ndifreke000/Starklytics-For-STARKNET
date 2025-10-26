@@ -1,4 +1,5 @@
-import { Account, Contract, RpcProvider, CallData } from 'starknet';
+import { Account, Contract, RpcProvider, CallData, uint256 } from 'starknet';
+import axios from 'axios';
 
 export interface DepositRequest {
   bountyId: string;
@@ -14,65 +15,199 @@ export interface PayoutRequest {
   token: string;
 }
 
+export interface TransactionStatus {
+  status: 'pending' | 'confirmed' | 'failed';
+  blockNumber?: number;
+  confirmations?: number;
+}
+
 export class AutoSwapprService {
   private provider: RpcProvider;
   private contractAddress: string;
+  private apiUrl: string;
+  private apiKey: string;
 
   constructor() {
-    this.provider = new RpcProvider({ nodeUrl: 'https://starknet-mainnet.reddio.com/rpc/v0_7' });
-    this.contractAddress = import.meta.env.VITE_BOUNTY_CONTRACT_ADDRESS || '0x1234567890abcdef';
+    this.provider = new RpcProvider({ 
+      nodeUrl: import.meta.env.VITE_STARKNET_RPC_URL || 'https://starknet-mainnet.public.blastapi.io'
+    });
+    this.contractAddress = import.meta.env.VITE_BOUNTY_CONTRACT_ADDRESS || '0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7';
+    this.apiUrl = import.meta.env.VITE_AUTOSWAPPR_API_URL || 'https://api.autoswappr.com';
+    this.apiKey = import.meta.env.VITE_AUTOSWAPPR_API_KEY || '';
   }
 
   async depositBountyFunds(request: DepositRequest): Promise<{ success: boolean; txHash?: string; error?: string }> {
     try {
-      // In production, this would interact with actual AutoSwappr contracts
-      const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-      
-      // Simulate deposit process
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      return {
-        success: true,
-        txHash: mockTxHash
-      };
+      // Call AutoSwappr API to initiate deposit
+      const response = await axios.post(
+        `${this.apiUrl}/v1/deposits`,
+        {
+          bountyId: request.bountyId,
+          amount: request.amount,
+          token: request.token,
+          creatorAddress: request.creatorAddress,
+          contractAddress: this.contractAddress
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        return {
+          success: true,
+          txHash: response.data.transactionHash
+        };
+      } else {
+        return {
+          success: false,
+          error: response.data.error || 'Deposit failed'
+        };
+      }
     } catch (error: any) {
+      console.error('AutoSwappr deposit error:', error);
       return {
         success: false,
-        error: error.message
+        error: error.response?.data?.error || error.message || 'Failed to deposit funds'
       };
     }
   }
 
   async payoutBountyReward(request: PayoutRequest): Promise<{ success: boolean; txHash?: string; error?: string }> {
     try {
-      const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-      
-      // Simulate payout process
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      return {
-        success: true,
-        txHash: mockTxHash
-      };
+      // Call AutoSwappr API to initiate payout
+      const response = await axios.post(
+        `${this.apiUrl}/v1/payouts`,
+        {
+          bountyId: request.bountyId,
+          winnerAddress: request.winnerAddress,
+          amount: request.amount,
+          token: request.token,
+          contractAddress: this.contractAddress
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        return {
+          success: true,
+          txHash: response.data.transactionHash
+        };
+      } else {
+        return {
+          success: false,
+          error: response.data.error || 'Payout failed'
+        };
+      }
     } catch (error: any) {
+      console.error('AutoSwappr payout error:', error);
       return {
         success: false,
-        error: error.message
+        error: error.response?.data?.error || error.message || 'Failed to process payout'
       };
     }
   }
 
-  async getDepositStatus(txHash: string): Promise<{ status: 'pending' | 'confirmed' | 'failed'; blockNumber?: number }> {
+  async getDepositStatus(txHash: string): Promise<TransactionStatus> {
     try {
-      // Simulate checking transaction status
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Get transaction receipt from Starknet
+      const receipt = await this.provider.getTransactionReceipt(txHash);
       
+      if (!receipt) {
+        return { status: 'pending' };
+      }
+
+      const status = receipt.status === 'ACCEPTED_ON_L2' || receipt.status === 'ACCEPTED_ON_L1' 
+        ? 'confirmed' 
+        : receipt.status === 'REJECTED' 
+        ? 'failed' 
+        : 'pending';
+
       return {
-        status: 'confirmed',
-        blockNumber: Math.floor(Math.random() * 1000000) + 700000
+        status,
+        blockNumber: receipt.blockNumber || undefined,
+        confirmations: status === 'confirmed' ? 1 : 0
       };
     } catch (error) {
+      console.error('Failed to get transaction status:', error);
       return { status: 'failed' };
     }
   }
+
+  async getPayoutStatus(txHash: string): Promise<TransactionStatus> {
+    return this.getDepositStatus(txHash);
+  }
+
+  async validateToken(tokenAddress: string): Promise<boolean> {
+    try {
+      // Validate token exists on Starknet
+      const response = await axios.get(
+        `${this.apiUrl}/v1/tokens/${tokenAddress}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`
+          }
+        }
+      );
+
+      return response.data.valid === true;
+    } catch (error) {
+      console.error('Token validation error:', error);
+      return false;
+    }
+  }
+
+  async getTokenBalance(tokenAddress: string, userAddress: string): Promise<string | null> {
+    try {
+      // Get token balance for user
+      const response = await axios.get(
+        `${this.apiUrl}/v1/tokens/${tokenAddress}/balance/${userAddress}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`
+          }
+        }
+      );
+
+      return response.data.balance || null;
+    } catch (error) {
+      console.error('Failed to get token balance:', error);
+      return null;
+    }
+  }
+
+  async estimateGas(amount: string, token: string): Promise<string | null> {
+    try {
+      // Estimate gas for transaction
+      const response = await axios.post(
+        `${this.apiUrl}/v1/estimate-gas`,
+        {
+          amount,
+          token,
+          contractAddress: this.contractAddress
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      return response.data.estimatedGas || null;
+    } catch (error) {
+      console.error('Gas estimation error:', error);
+      return null;
+    }
+  }
 }
+
+export const autoSwapprService = new AutoSwapprService();

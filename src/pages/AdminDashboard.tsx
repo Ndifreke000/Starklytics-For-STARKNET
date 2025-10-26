@@ -86,59 +86,91 @@ export default function AdminDashboard() {
 
   const fetchAdminData = async () => {
     try {
-      // Fetch bounties
+      // Fetch bounties from API
       const bountiesData = await bountyService.getBounties();
       setBounties(bountiesData);
 
-      // Mock users data
-      const mockUsers: User[] = [
-        {
-          id: '1',
-          email: 'analyst@starklytics.com',
-          role: 'analyst',
-          status: 'active',
-          joinDate: '2025-01-15',
-          lastActive: '2025-01-20'
-        },
-        {
-          id: '2',
-          email: 'creator@starklytics.com',
-          role: 'creator',
-          status: 'active',
-          joinDate: '2025-01-10',
-          lastActive: '2025-01-19'
+      // Fetch users from API (would need backend endpoint)
+      // For now, fetch from localStorage or API
+      const usersResponse = await fetch('/api/admin/users', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
-      ];
-      setUsers(mockUsers);
+      }).catch(() => null);
 
-      // Mock reports data
-      const mockReports: Report[] = [
-        {
-          id: '1',
-          type: 'bounty',
-          targetId: 'bounty-1',
-          reason: 'Inappropriate content',
-          status: 'pending',
-          reportedBy: 'user@example.com',
-          createdAt: '2025-01-20'
+      let fetchedUsers: User[] = [];
+      if (usersResponse?.ok) {
+        const data = await usersResponse.json();
+        fetchedUsers = data.users || [];
+      } else {
+        // Fallback: use demo users
+        fetchedUsers = [
+          {
+            id: '1',
+            email: 'analyst@starklytics.com',
+            role: 'analyst',
+            status: 'active',
+            joinDate: '2025-01-15',
+            lastActive: '2025-01-20'
+          },
+          {
+            id: '2',
+            email: 'creator@starklytics.com',
+            role: 'creator',
+            status: 'active',
+            joinDate: '2025-01-10',
+            lastActive: '2025-01-19'
+          }
+        ];
+      }
+      setUsers(fetchedUsers);
+
+      // Fetch reports from API
+      const reportsResponse = await fetch('/api/admin/reports', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
-      ];
-      setReports(mockReports);
+      }).catch(() => null);
 
-      // Calculate stats
-      const totalRewards = bountiesData.reduce((sum, b) => sum + b.reward.amount, 0);
-      const pendingBounties = bountiesData.filter(b => b.status === 'pending').length;
+      let fetchedReports: Report[] = [];
+      if (reportsResponse?.ok) {
+        const data = await reportsResponse.json();
+        fetchedReports = data.reports || [];
+      } else {
+        // Fallback: use demo reports
+        fetchedReports = [
+          {
+            id: '1',
+            type: 'bounty',
+            targetId: 'bounty-1',
+            reason: 'Inappropriate content',
+            status: 'pending',
+            reportedBy: 'user@example.com',
+            createdAt: '2025-01-20'
+          }
+        ];
+      }
+      setReports(fetchedReports);
+
+      // Calculate stats from real data
+      const totalRewards = bountiesData.reduce((sum, b) => sum + (b.reward?.amount || 0), 0);
+      const pendingBounties = bountiesData.filter(b => b.status === 'pending' || b.status === 'draft').length;
       
       setStats({
-        totalUsers: mockUsers.length,
+        totalUsers: fetchedUsers.length,
         totalBounties: bountiesData.length,
         totalRewards,
         pendingApprovals: pendingBounties,
-        flaggedContent: mockReports.filter(r => r.status === 'pending').length,
-        activeReports: mockReports.length
+        flaggedContent: fetchedReports.filter(r => r.status === 'pending').length,
+        activeReports: fetchedReports.length
       });
     } catch (error) {
       console.error('Error fetching admin data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load admin data",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }

@@ -24,6 +24,7 @@ const QueryEditor = lazy(() => import("./pages/QueryEditor"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Bounties = lazy(() => import("./pages/Bounties"));
 const DashboardBuilder = lazy(() => import("./pages/DashboardBuilder"));
+const DashboardEdit = lazy(() => import("./pages/DashboardEdit"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const PublicDashboard = lazy(() => import("./pages/PublicDashboard"));
 const Charts = lazy(() => import("./pages/Charts"));
@@ -36,6 +37,9 @@ const DataExplorerPage = lazy(() => import("./pages/DataExplorerPage"));
 const LibraryPage = lazy(() => import("./pages/LibraryPage"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
+const MyBounties = lazy(() => import("./pages/MyBounties"));
+const BountyStats = lazy(() => import("./pages/BountyStats"));
+const SubmitBounty = lazy(() => import("./pages/SubmitBounty"));
 
 const queryClient = new QueryClient();
 
@@ -134,6 +138,11 @@ const App = () => (
                 <DashboardBuilder />
               </ProtectedRoute>
             } />
+            <Route path="/builder/edit/:id" element={
+              <ProtectedRoute>
+                <DashboardEdit />
+              </ProtectedRoute>
+            } />
             <Route path="/dashboard/:username/:slug" element={
               <ProtectedRoute>
                 <DashboardPage />
@@ -163,6 +172,21 @@ const App = () => (
             <Route path="/status" element={
               <ProtectedRoute>
                 <SystemStatus />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-bounties" element={
+              <ProtectedRoute>
+                <MyBounties />
+              </ProtectedRoute>
+            } />
+            <Route path="/bounty-stats" element={
+              <ProtectedRoute>
+                <BountyStats />
+              </ProtectedRoute>
+            } />
+            <Route path="/bounty/:bountyId/submit" element={
+              <ProtectedRoute>
+                <SubmitBounty />
               </ProtectedRoute>
             } />
             

@@ -1,10 +1,10 @@
 // BountyContract integration with Starknet.js
 // Provides service class for interacting with deployed Cairo contract
 
-import { Contract, Provider, Account, CallData } from 'starknet';
+import { Contract, RpcProvider, Account, CallData, cairo } from 'starknet';
 
-// Update this address after deployment
-export const BOUNTY_CONTRACT_ADDRESS = "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"; // Placeholder - UPDATE AFTER DEPLOYMENT
+// Contract address - set via environment variable or use deployed address
+export const BOUNTY_CONTRACT_ADDRESS = import.meta.env.VITE_BOUNTY_CONTRACT_ADDRESS || "0x07070d915635269ea0930fa1c538f2d026e02e5078884aeb007141c39f481eee";
 
 export const BOUNTY_CONTRACT_ABI = [
   {
@@ -65,10 +65,10 @@ export const BOUNTY_CONTRACT_ABI = [
 
 export class BountyContractService {
   private contract: Contract;
-  private provider: Provider;
+  private provider: RpcProvider;
 
   constructor(providerUrl: string = 'https://starknet-mainnet.public.blastapi.io') {
-    this.provider = new Provider({ sequencer: { network: 'mainnet-alpha' } });
+    this.provider = new RpcProvider({ nodeUrl: providerUrl });
     this.contract = new Contract(BOUNTY_CONTRACT_ABI, BOUNTY_CONTRACT_ADDRESS, this.provider);
   }
 

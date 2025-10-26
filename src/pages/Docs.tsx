@@ -70,6 +70,59 @@ export default function Docs() {
               </CardHeader>
             </Card>
 
+            {/* New Features Section */}
+            <Card className="glass-card border-border/30">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Zap className="w-5 h-5 text-primary" />
+                  <span>Latest Features</span>
+                </CardTitle>
+                <CardDescription>
+                  Discover the newest capabilities in Starklytics Suite
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-primary" />
+                      Real-Time Statistics
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Live WebSocket updates for bounty metrics and participant activity
+                    </p>
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Trophy className="w-4 h-4 text-primary" />
+                      Enhanced Bounty System
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Improved bounty creation, participation tracking, and completion verification
+                    </p>
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-primary" />
+                      Security Features
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Rate limiting, input validation, and secure file upload handling
+                    </p>
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Database className="w-4 h-4 text-primary" />
+                      Data Management
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Monthly statistics, CSV exports, and comprehensive data exploration tools
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Quick Start Guide */}
             <Card className="glass-card border-border/30">
               <CardHeader>
